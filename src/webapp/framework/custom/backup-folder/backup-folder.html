@@ -268,6 +268,7 @@
                 el._setRefs();
                 el._setUp();
                 el._checkEnabled();
+                el._watchListener();
             },
             setRefs: function () {
                 var el = this;
@@ -290,9 +291,10 @@
             },
             watchListener: function () {
                 var el = this;
-                el._refs.watch.onCheck(function () {
+                el._refs.watch.onCheck(function () {                    
                     // TODO do watch
                     el.watch = "true";
+                    el._watch();
                     el._saveData();
                 });
                 el._refs.watch.onUncheck(function () {
@@ -300,6 +302,10 @@
                     el.watch = "false";
                     el._saveData();
                 });
+            },
+            watch: function(){
+                var el = this;
+                io.watch(el.from, el.to);
             },
             saveData: function () {
                 var el = this;
