@@ -1,0 +1,331 @@
+<style>
+    backup-folder {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        box-sizing: border-box;
+        background-color: #464646;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    backup-folder #actionButtons {
+        display: flex;
+    }
+
+    backup-folder .remove {
+        margin-left: auto;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    backup-folder .customTextRow {
+        display: flex;
+        flex-direction: row;
+        margin-left: 10px;
+    }
+
+    backup-folder .customTextRow-label {
+        font-size: 15px;
+        margin-right: 10px;
+        line-height: 39px;
+    }
+
+    backup-folder .customTextRow-row {
+        display: flex;
+        flex-direction: row;
+        flex-grow: 1;
+        padding: 10px 10px 10px 0px;
+        box-sizing: border-box;
+    }
+
+    backup-folder .folder-block {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 10px;
+    }
+
+    backup-folder .folder-block vc-text {
+        width: 100%;
+    }
+
+    backup-folder .folder-block vc-text .vc-text-main,
+    backup-folder .folder-block vc-text .vc-text-underline {
+        margin-right: 30px;
+    }
+
+    backup-folder .browse {
+        cursor: pointer;
+        margin-top: 30px;
+        position: absolute;
+        right: 10px;
+    }
+
+    .browse .vc-button-button {
+        display: none;
+    }
+
+    backup-folder .browse i:hover {
+        color: #18c796;
+    }
+
+    backup-folder #folder-to {
+        background-color: #3a3a3a;
+        min-height: 38px;
+        width: 100%;
+    }
+
+    backup-folder #folder-to .browse {
+        margin-top: 10px;
+        right: 30px;
+    }
+
+    backup-folder #folder-to .folder-block vc-text .vc-text-main,
+    backup-folder #folder-to .folder-block vc-text .vc-text-underline {
+        margin-right: 40px;
+    }
+
+    backup-folder #add-to {
+        width: 100%;
+        padding: 10px 20px 10px 20px;
+        box-sizing: border-box;
+        position: relative;
+        -webkit-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        z-index: 101;
+    }
+
+    backup-folder #to-container {
+        max-height: 100px;
+        padding: 5px 10px 0px 10px;
+    }
+
+    backup-folder vc-toggle .vc-toggle-input[type="checkbox"]+.vc-toggle-label::after {
+        top: auto !important;
+    }
+</style>
+
+<template>
+    <div id="actionButtons">
+        <vc-button id="run" value="Run" disabled="true" onclick="this.parentNode.parentNode.run();"></vc-button>
+        <div class="customTextRow">
+            <div class="customTextRow-row">
+                <vc-toggle label="Keep watching" disabled="true" id="watch"></vc-toggle>
+            </div>
+        </div>
+        <i class="material-icons remove" id="remove" onclick="this.parentNode.parentNode.remove();">clear</i>
+    </div>
+
+    <div id="folder-from" class="folder-block">
+        <vc-button class="browse">
+            <i class="material-icons" value="Open" onclick="this.parentNode.parentNode.parentNode.browseFrom();">folder</i>
+        </vc-button>
+        <vc-text label="Project folder:" placeholder="folder" onkeyup="this.parentNode.parentNode.setFrom();"></vc-text>
+    </div>
+    <div class="customTextRow-label">Clone to:</div>
+    <div id="folder-to">
+        <vc-button id="add-to" value="Add" onclick="this.parentNode.parentNode.addTo();"></vc-button>
+        <vc-scroll thickness="8">
+            <div id="to-container"></div>
+        </vc-scroll>
+    </div>
+</template>
+
+<script>
+    vcomet.element("backup-folder", null, {
+
+        dependencies: [
+            "../../vcomet/ui/vc-text",
+            "../../vcomet/ui/vc-toggle"
+        ],
+
+        properties: {
+            from: {
+                value: "",
+                reflect: false
+            },
+            to: {
+                value: [],
+                reflect: false
+            },
+            watch: {
+                value: "false",
+                reflect: false
+            }
+        },
+
+        privateProperties: {
+            refs: {
+                value: {}
+            },
+            misc: {
+                value: {}
+            }
+        },
+
+        functions: {
+            run: function () {
+                var el = this;
+                if (el.from && el.to && el.to.length > 0) {
+                    io.run(el.from, el.to);
+                } else {
+                    console.log("Bad configuration");
+
+                }
+            },
+            remove: function () {
+                var el = this;
+                el._refs.appcontainer.removeData("backups", el.id);
+                el.parentElement.removeChild(el);
+                el._checkEnabled();
+            },
+            setFrom: function () {
+                var el = this;
+                el.from = el._refs.fromText.value;
+                el._checkEnabled();
+                el._saveData();
+            },
+            setTo: function (text) {
+                var el = this;
+                var allTo = el._refs.toContainer.querySelectorAll("vc-text");
+                var toRes = [];
+                allTo.forEach(function (element) {
+                    if (element.value != "") {
+                        toRes.push(element.value);
+                    }
+                });
+                el.to = toRes;
+                el._checkEnabled();
+                el._saveData();
+            },
+            browseFrom: function () {
+                var el = this;
+                dialog.showOpenDialog({
+                    properties: ['openDirectory']
+                }, function (paths) {
+                    if (paths) {
+                        el._refs.fromText.value = paths[0];
+                        el.setFrom();
+                    }
+                });
+            },
+            browseTo: function (addToBlock) {
+                var el = this;
+                dialog.showOpenDialog({
+                    properties: ['openDirectory']
+                }, function (paths) {
+                    if (paths) {
+                        addToBlock.querySelector("vc-text").value = paths[0];
+                        el.setTo();
+                    }
+                });
+            },
+            removeTo: function (addToBlock) {
+                var el = this;
+                addToBlock.parentElement.removeChild(addToBlock);
+                el.setTo();
+            },
+            addTo: function (value) {
+                var el = this;
+                var block = document.createElement("div");
+                block.classList.add("folder-block");
+                var browse = document.createElement("vc-button");
+                browse.classList.add("browse");
+                var browseIcon = document.createElement("i");
+                browseIcon.classList.add("material-icons");
+                browseIcon.setAttribute("value", "Open");
+                browseIcon.innerText = "folder";
+                browseIcon.setAttribute("onclick",
+                    "this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.browseTo(this.parentNode.parentNode);"
+                );
+                browse.appendChild(browseIcon);
+                block.appendChild(browse);
+                var text = document.createElement("vc-text");
+                text.placeholder = "folder";
+                text.onkeyup = "this.parentNode.parentNode.parentNode.parentNode.setTo();";
+                if (value) {
+                    text.onReady(function () {
+                        text.value = value;
+                    });
+                }
+                block.appendChild(text);
+                var close = document.createElement("i");
+                close.setAttribute("onclick",
+                    "this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeTo(this.parentNode);"
+                );
+                close.classList.add("material-icons", "remove");
+                close.innerText = "clear";
+                block.appendChild(close);
+                el._refs.toContainer.appendChild(block);
+            }
+        },
+
+        privateFunctions: {
+            init: function () {
+                var el = this;
+                el._setRefs();
+                el._setUp();
+                el._checkEnabled();
+            },
+            setRefs: function () {
+                var el = this;
+                el._refs.appcontainer = document.querySelector("app-container");
+                el._refs.fromText = el.querySelector("#folder-from").querySelector("vc-text");
+                el._refs.backupEr = el.parentNode.parentNode.parentNode.parentNode;
+                el._refs.toContainer = el.querySelector("#to-container");
+                el._refs.run = el.querySelector("#run");
+                el._refs.watch = el.querySelector("#watch");
+            },
+            checkEnabled: function () {
+                var el = this;
+                if (el.from && el.to && Array.isArray(el.to) && el.to.length > 0) {
+                    el._refs.run.disabled = false;
+                    el._refs.watch.disabled = false;
+                } else {
+                    el._refs.run.disabled = true;
+                    el._refs.watch.disabled = true;
+                }
+            },
+            watchListener: function () {
+                var el = this;
+                el._refs.watch.onCheck(function () {
+                    // TODO do watch
+                    el.watch = "true";
+                    el._saveData();
+                });
+                el._refs.watch.onUncheck(function () {
+                    // TODO stop watch
+                    el.watch = "false";
+                    el._saveData();
+                });
+            },
+            saveData: function () {
+                var el = this;
+                el._refs.backupEr.updateData(el);
+            },
+            setUp: function () {
+                var el = this;
+                if (el.from) {
+                    el._refs.fromText.value = el.from;
+                }
+                if (el.to && Array.isArray(el.to)) {
+                    el.to.forEach(function (element) {
+                        el.addTo(element);
+                    });
+                }
+                if (el.watch) {}
+            }
+        },
+
+        onCreated: function () {},
+
+        onReady: function () {
+            var el = this;
+            el._init();
+        }
+
+
+    });
+</script>

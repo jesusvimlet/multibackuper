@@ -1,0 +1,9 @@
+{
+    "arch": "x32",
+    "asar": true,
+    "dir": "path.join(__dirname, '../')",
+    "icon": "path.join(__dirname, '../build/icons/icon')",
+    "out": "path.join(__dirname, '../build')",
+    "overwrite": true,
+    "platform": "process.env.BUILD_TARGET || 'all'"
+}

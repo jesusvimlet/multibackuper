@@ -1,0 +1,44 @@
+{
+  "name": "multibackuper",
+  "productName": "Multibackuper",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:linux": "electron-builder -l",
+    "build:windows": "electron-builder -w",
+    "build:both": "electron-builder -w -l",
+    "build:dir": "electron-builder --dir"
+  },
+  "bin": {
+    "backuper": "./index.js"
+  },
+  "dependencies": {
+    "fs-extra": "6.0.1",
+    "glob-watcher": "5.0.1"
+  },
+  "devDependencies": {
+    "electron": "^1.8.6",
+    "electron-reload": "1.2.2",
+    "electron-builder": "20.13.4"
+  },
+  "author": "Jesus Perez Felipe",
+  "license": "MIT",
+  "build": {
+    "appId": "com.backuper.app",
+    "directories": {
+      "output": "../../release"
+    },
+    "win": {
+      "target": "zip"
+    },
+    "linux": {
+      "target": "zip"
+    },
+    "mac": {
+      "target": "zip"
+    }
+  }
+}
