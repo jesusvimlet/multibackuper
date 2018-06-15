@@ -2,93 +2,97 @@ var path = require("path");
 var fs = require("fs-extra");
 var watch = require("glob-watcher");
 var io = require("@vimlet/io");
+var glob = require("glob");
 
 var cwd = process.cwd();
 
 // @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output]
 exports.run = function (from, to, options) {
     options = options || {};
-    if(options.exclude){
-        // Use glob to generate filterFunction
-        // const filterFunc = (src, dest) => {
-        //     // your logic here
-        //     // it will be copied if return true
-        //   }
-        // And pass filter functin to options.filter
-    }
-    var length = to.length;
-    for (var i = 0; i < length; i++) {
-        var destination = path.join(to[i], path.basename(from));
-        emptyAndCopy(from, destination);
-    }
-
+    var files = io.getFiles(from, options);
+    emptyDestSync(to);
+    copyFiles(files, to);
 };
 
-// @function emptyAndCopy [Empty directory and copy data from folder to output folder]   @param from {string} [Project folder] @param to {string} [Output folder]
-function emptyAndCopy(from, to, options) {
-    options = options || {};
-    fs.emptyDir(to, function (err) {
-        if (err) {
-            return console.error(err);
-        }
-        fs.copy(from, to, {
-            filter: options.filter
-        }, function (err) {
-            if (err) {
-                return console.error(err);
+// @function copyFiles (private) [Copy files to several folders] @param files {object} [Object containing root and relative paths] @param to {string[]} 
+function copyFiles(files, to) {
+    for (var key in files) {
+        files[key].files.forEach(function (file) {
+            var length = to.length;
+            for (var i = 0; i < length; i++) {
+                fs.copy(path.join(files[key].root, file), path.join(to[i], file));
             }
         });
-    });
+    }
 }
 
 
+// @function emptyDestSync (private) [Empty folder]
+function emptyDestSync(to) {
+    var length = to.length;
+    for (var i = 0; i < length; i++) {
+        fs.emptyDirSync(to[i]);
+    }
+}
 
+// @function watch (public) {object} [Keep watching folder for changes] @param from {string} @param to {string[]} @param options [exclude]
 exports.watch = function (from, to, options) {
     options = options || {};
     exports.run(from, to, options); // Copy before watching
-var output = to[0]; // TODO do a for loop and take each output from there.
+    if (options.exclude) {
+        // Ensure that from is in exclude, else add it to not look the whole drive
+        var excludeLenght = options.exclude.length;
+        for (var exclI = 0; exclI < excludeLenght; exclI++) {
+            if (options.exclude[exclI].indexOf(from) < 0) {
+                options.exclude[exclI] = path.join(from, options.exclude[exclI]);
+            }
+        }
+    }
+
     var watcher = watch(from, {
-        events: ['add', 'change', 'unlink', 'addDir', 'unlinkDir']
+        events: ['add', 'change', 'unlink', 'unlinkDir']
     });
     watcher.on('change', function (filePath, stat) {
         if (!isExcluded(options.exclude, filePath)) {
-            // Relative output is where the template will be saved after parsed
-            var relativeOutput = getRelativeOutput(from, output, filePath);
-            
+            var length = to.length;
+            for (var i = 0; i < length; i++) {
+                // Relative output is where the template will be saved after parsed
+                var relativeOutput = getRelativeOutput(from, to[i], filePath);
+                fs.copy(filePath, path.join(relativeOutput, path.basename(filePath)));
+            }
         }
     });
     watcher.on('add', function (filePath, stat) {
         if (!isExcluded(options.exclude, filePath)) {
-            // Relative output is where the template will be saved after parsed
-            var relativeOutput = getRelativeOutput(from, output, filePath);
-           console.log(filePath);
-           console.log(relativeOutput);
-           // TODO, get path where the file must be stored
-           
+            var length = to.length;
+            for (var i = 0; i < length; i++) {
+                // Relative output is where the template will be saved after parsed
+                var relativeOutput = getRelativeOutput(from, to[i], filePath);
+                fs.copy(filePath, path.join(relativeOutput, path.basename(filePath)));
+            }
         }
     });
     watcher.on('unlink', function (filePath, stat) {
         if (!isExcluded(options.exclude, filePath)) {
-            // Relative output is where the template will be saved after parsed
-            var relativeOutput = getRelativeOutput(from, output, filePath, true);
-            // var parsedPath = path.join(relativeOutput, path.basename(filePath, ".vmt"));
-            // if (fs.existsSync(parsedPath)) {
-            //     fs.unlinkSync(parsedPath);
-            //     console.log("Removed --> ", parsedPath);
-            // }
+            var length = to.length;
+            for (var i = 0; i < length; i++) {
+                // Relative output is where the template will be saved after parsed
+                var relativeOutput = getRelativeOutput(from, to[i], filePath, true);
+                var parsedPath = path.join(relativeOutput, path.basename(filePath));
+                if (fs.existsSync(parsedPath)) {
+                    fs.unlinkSync(parsedPath);
+                }
+            }
         }
     });
-    watcher.on('addDir', function (filePath, stat) {
-        var relativeOutput = getRelativeOutput(from, output, filePath);
-        // fs.mkdirs(path.join(relativeOutput, path.basename(filePath)), function () {
-        //     console.log("Folder created --> ", filePath, "=>", path.join(relativeOutput, path.basename(filePath)));
-        // });
-    });
     watcher.on('unlinkDir', function (filePath, stat) {
-        var relativeOutput = getRelativeOutput(from, output, filePath, true);
-        // fs.remove(path.join(relativeOutput, path.basename(filePath)), function () {
-        //     console.log("Folder removed --> ", path.join(relativeOutput, path.basename(filePath)));
-        // });
+        var length = to.length;
+            for (var i = 0; i < length; i++) {
+                // Relative output is where the template will be saved after parsed
+                var relativeOutput = getRelativeOutput(from, to[i], filePath, true);
+                fs.remove(path.join(relativeOutput, path.basename(filePath)), function () {
+                });
+            }
     });
     watcher.on('error', function (error) {
         if (process.platform === 'win32' && error.code === 'EPERM') {
@@ -97,6 +101,7 @@ var output = to[0]; // TODO do a for loop and take each output from there.
             broadcastErr(error);
         }
     });
+    return watcher;
 }
 
 /*
@@ -109,39 +114,39 @@ var output = to[0]; // TODO do a for loop and take each output from there.
 function getRelativeOutput(from, output, filePath, deleted) {
     var relativeOutput;
     if (!Array.isArray(from)) {
-      if (io.isInPattern(filePath, from) || deleted) {
-        var rootFromPattern = io.getRootFromPattern(from);
-        // Relative output is where the template will be saved after parse
-        relativeOutput = path.dirname(path.relative(rootFromPattern, filePath));
-        relativeOutput = path.join(output, relativeOutput);
-      }
-    } else {
-      from.forEach(function (incl) {
-        if (io.isInPattern(filePath, incl) || deleted) {
-          var rootFromPattern = io.getRootFromPattern(incl);
-          // Relative output is where the template will be saved after parse
-          relativeOutput = path.dirname(path.relative(rootFromPattern, filePath));
-          relativeOutput = path.join(output, relativeOutput);
+        if (io.isInPattern(filePath, from) || deleted) {            
+            var rootFromPattern = io.getRootFromPattern(from);
+            // Relative output is where the template will be saved after parse
+            relativeOutput = path.dirname(path.relative(rootFromPattern, filePath));
+            relativeOutput = path.join(output, relativeOutput);
         }
-      });
+    } else {
+        from.forEach(function (incl) {
+            if (io.isInPattern(filePath, incl) || deleted) {
+                var rootFromPattern = io.getRootFromPattern(incl);
+                // Relative output is where the template will be saved after parse
+                relativeOutput = path.dirname(path.relative(rootFromPattern, filePath));
+                relativeOutput = path.join(output, relativeOutput);
+            }
+        });
     }
     return relativeOutput;
-  }
+}
 
 // @function isExlcuded [Check if given file is excluded]
 function isExcluded(excluded, filePath) {
     if (!excluded) {
-      return false;
+        return false;
     }
     if (!Array.isArray(excluded)) {
-      return io.isInPattern(filePath, excluded);
+        return io.isInPattern(filePath, excluded);
     } else {
-      var isIn = false;
-      excluded.forEach(function (excl) {
-        if (io.isInPattern(filePath, excl)) {
-          isIn = true;
-        }
-      });
-      return isIn;
+        var isIn = false;
+        excluded.forEach(function (excl) {
+            if (io.isInPattern(filePath, excl)) {
+                isIn = true;
+            }
+        });
+        return isIn;
     }
-  }
+}

@@ -20,13 +20,13 @@ Multibackuper actually clone the project, it does not keep a history of previous
 ## TODO
 
 * Watcher still not done.
+* Exclude subfolders from backups.
 
 
 ## Desirables
 
 * Allow to save previous versions of the project.
 * Start with OS.
-* Exclude subfolders from backup
 
 ## Installation
 

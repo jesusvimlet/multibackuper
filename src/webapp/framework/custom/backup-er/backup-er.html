@@ -64,6 +64,7 @@
                     backupFolder.from = data[key].from;
                     backupFolder.to = data[key].to;
                     backupFolder.watch = data[key].watch;
+                    backupFolder.exclude = data[key].exclude;
                 } else {
                     var id = "0";
 
@@ -91,8 +92,9 @@
                 currentData.from = backupFolder.from;
                 currentData.to = backupFolder.to;
                 currentData.watch = backupFolder.watch;
+                currentData.exclude = backupFolder.exclude;
                 data[backupFolder.id] = currentData;
-                el._refs.appcontainer.saveData("backups", data);                
+                el._refs.appcontainer.saveData("backups", data);                                
             }
         },
 
@@ -100,7 +102,7 @@
             init: function () {
                 var el = this;
                 el._setRefs();
-                var data = el._refs.appcontainer.getData("backups");
+                var data = el._refs.appcontainer.getData("backups");                
                 for (var key in data) {
                     el.add(key);
                 }

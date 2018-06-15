@@ -1,0 +1,101 @@
+<style>
+    component-add {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        box-sizing: border-box;
+    background-color: #3a3a3a;
+    }
+
+    #component-add-add {
+        width: 100%;
+        padding: 10px 20px 10px 20px;
+        box-sizing: border-box;
+        position: relative;
+        -webkit-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
+        z-index: 101;
+        background-color: #2d2d2d;
+    }
+
+    #component-add-container {
+        padding: 10px 20px 0px 20px;
+        box-sizing: border-box;
+    }
+</style>
+
+<template>
+    <vc-button id="component-add-add" value="Add" onclick="this.parentNode._add();"></vc-button>
+    <vc-scroll thickness="8">
+        <div id="component-add-container"></div>
+    </vc-scroll>
+</template>
+
+<script>
+    vcomet.element("component-add", null, {
+
+        dependencies: [
+            "../../vcomet/ui/vc-button"
+        ],
+
+        properties: {
+            maxHeight:{
+                value:"300px",
+                reflect:true
+            }
+        },
+
+        privateProperties: {
+            refs: {
+                value: {}
+            },
+            misc: {
+                value: {}
+            }
+        },
+
+        functions: {
+            add: function (child) {
+                var el = this;                
+                el._refs.container.appendChild(child);
+            },
+            getChilds: function(){
+                var el = this; 
+                return el._refs.container.childNodes;         
+            }
+        },
+
+        privateFunctions: {
+            init: function () {
+                var el = this;
+                el._setRefs();
+                el._setMaxHeight();
+            },
+            setRefs: function () {
+                var el = this;
+                el._refs.container = el.querySelector("#component-add-container");
+                el._refs.scroll = el.querySelector("vc-scroll");
+            },
+            add:function(){
+                var el = this;                
+                vcomet.triggerCallback('onadd', el, el, [el]);
+            },
+            setMaxHeight:function(){
+                var el = this;   
+                el._refs.scroll.style.maxHeight = el.maxHeight;
+            }
+        },
+
+        onCreated: function () {
+            vcomet.createCallback("onadd", this);
+            },
+
+        onReady: function () {
+            var el = this;
+            el._init();
+        }
+
+
+    });
+</script>

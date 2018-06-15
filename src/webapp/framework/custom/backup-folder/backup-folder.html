@@ -8,6 +8,8 @@
         padding: 10px;
         box-sizing: border-box;
         margin-bottom: 10px;
+        display: flex;
+        flex-direction: column;
     }
 
     backup-folder #actionButtons {
@@ -70,19 +72,26 @@
         color: #18c796;
     }
 
-    backup-folder #folder-to {
+    backup-folder #folder-to, backup-folder component-add {
         background-color: #3a3a3a;
         min-height: 38px;
         width: 100%;
     }
 
-    backup-folder #folder-to .browse {
+    backup-folder #folder-to .browse, backup-folder component-add .browse {
         margin-top: 10px;
         right: 30px;
     }
 
+    backup-folder #folder-to vc-scroll {
+     max-height: 100px;
+    }
+    
+
     backup-folder #folder-to .folder-block vc-text .vc-text-main,
-    backup-folder #folder-to .folder-block vc-text .vc-text-underline {
+    backup-folder #folder-to .folder-block vc-text .vc-text-underline,
+    backup-folder component-add .folder-block vc-text .vc-text-main,
+    backup-folder component-add .folder-block vc-text .vc-text-underline  {
         margin-right: 40px;
     }
 
@@ -98,12 +107,35 @@
     }
 
     backup-folder #to-container {
-        max-height: 100px;
         padding: 5px 10px 0px 10px;
     }
 
     backup-folder vc-toggle .vc-toggle-input[type="checkbox"]+.vc-toggle-label::after {
         top: auto !important;
+    }
+
+    #extraButtons {
+        margin-left: auto;
+        cursor: pointer;
+        margin-top: 10px;
+        text-decoration: none;
+        -webkit-touch-callout: none;
+        /* iOS Safari */
+        -webkit-user-select: none;
+        /* Safari */
+        -khtml-user-select: none;
+        /* Konqueror HTML */
+        -moz-user-select: none;
+        /* Firefox */
+        -ms-user-select: none;
+        /* Internet Explorer/Edge */
+        user-select: none;
+    }
+
+
+    #extra {
+        width: 100;
+        height: auto;
     }
 </style>
 
@@ -131,6 +163,15 @@
             <div id="to-container"></div>
         </vc-scroll>
     </div>
+    <div id="extraButtons" onclick="this.parentNode.toggleExtra();">
+        <i class="material-icons" value="Open">settings</i>
+        <i id="extraToggle" class="material-icons" value="Open">expand_more</i>
+    </div>
+    <div id="extra" style="display:none;">
+        <component-add>
+
+        </component-add>
+    </div>
 </template>
 
 <script>
@@ -138,7 +179,8 @@
 
         dependencies: [
             "../../vcomet/ui/vc-text",
-            "../../vcomet/ui/vc-toggle"
+            "../../vcomet/ui/vc-toggle",
+            "../component-add"
         ],
 
         properties: {
@@ -153,6 +195,10 @@
             watch: {
                 value: "false",
                 reflect: false
+            },
+            exclude: {
+                value: [],
+                reflect: false
             }
         },
 
@@ -166,10 +212,26 @@
         },
 
         functions: {
+            toggleExtra: function () {
+                var el = this;
+                if (el._refs.extra.style.display === "none") {
+                    el._refs.extra.style.display = "block";
+                    el._refs.extraToggle.innerText = "expand_less";
+                } else {
+                    el._refs.extra.style.display = "none";
+                    el._refs.extraToggle.innerText = "expand_more";
+                }
+            },
             run: function () {
                 var el = this;
                 if (el.from && el.to && el.to.length > 0) {
-                    io.run(el.from, el.to);
+                    var excl;
+                    if (el.exclude && Array.isArray(el.exclude)) {
+                        excl = el.exclude;
+                    }
+                    io.run(el.from, el.to, {
+                        exclude: excl
+                    });
                 } else {
                     console.log("Bad configuration");
 
@@ -200,6 +262,18 @@
                 el._checkEnabled();
                 el._saveData();
             },
+            setExclude: function (text) {
+                var el = this;
+                var allExclude = el._refs.options.exclude.querySelectorAll("vc-text");
+                var excludeRes = [];
+                allExclude.forEach(function (element) {
+                    if (element.value != "") {
+                        excludeRes.push(element.value);
+                    }
+                });
+                el.exclude = excludeRes;                
+                el._saveData();
+            },
             browseFrom: function () {
                 var el = this;
                 dialog.showOpenDialog({
@@ -222,10 +296,26 @@
                     }
                 });
             },
+            browseExclude: function (addToBlock) {
+                var el = this;
+                dialog.showOpenDialog({
+                    properties: ['openDirectory']
+                }, function (paths) {
+                    if (paths) {
+                        addToBlock.querySelector("vc-text").value = paths[0];
+                        el.setExclude();
+                    }
+                });
+            },
             removeTo: function (addToBlock) {
                 var el = this;
                 addToBlock.parentElement.removeChild(addToBlock);
                 el.setTo();
+            },
+            removeExclude: function (addToBlock) {
+                var el = this;
+                addToBlock.parentElement.removeChild(addToBlock);
+                el.setExclude();
             },
             addTo: function (value) {
                 var el = this;
@@ -237,14 +327,16 @@
                 browseIcon.classList.add("material-icons");
                 browseIcon.setAttribute("value", "Open");
                 browseIcon.innerText = "folder";
+                browseIcon.parent = el;
                 browseIcon.setAttribute("onclick",
-                    "this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.browseTo(this.parentNode.parentNode);"
+                    "this.parent.browseTo(this.parentNode.parentNode);"
                 );
                 browse.appendChild(browseIcon);
                 block.appendChild(browse);
                 var text = document.createElement("vc-text");
                 text.placeholder = "folder";
-                text.onkeyup = "this.parentNode.parentNode.parentNode.parentNode.setTo();";
+                text.parent = el;
+                text.setAttribute("onkeyup", "this.parent.setTo();");
                 if (value) {
                     text.onReady(function () {
                         text.value = value;
@@ -252,8 +344,9 @@
                 }
                 block.appendChild(text);
                 var close = document.createElement("i");
+                close.parent = el;
                 close.setAttribute("onclick",
-                    "this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeTo(this.parentNode);"
+                    "this.parent.removeTo(this.parentNode);"
                 );
                 close.classList.add("material-icons", "remove");
                 close.innerText = "clear";
@@ -269,6 +362,45 @@
                 el._setUp();
                 el._checkEnabled();
                 el._watchListener();
+                el._refs.options.exclude.onadd(function () {
+                    el._addExclude();
+                });
+            },
+            addExclude: function (value) {
+                var el = this;
+                var block = document.createElement("div");
+                block.classList.add("folder-block");
+                var browse = document.createElement("vc-button");
+                browse.classList.add("browse");
+                var browseIcon = document.createElement("i");
+                browseIcon.classList.add("material-icons");
+                browseIcon.setAttribute("value", "Open");
+                browseIcon.innerText = "folder";
+                browseIcon.parent = el;
+                browseIcon.setAttribute("onclick",
+                    "this.parent.browseExclude(this.parentNode.parentNode);"
+                );
+                browse.appendChild(browseIcon);
+                block.appendChild(browse);
+                var text = document.createElement("vc-text");
+                text.placeholder = "folder";
+                text.parent = el;
+                text.setAttribute("onkeyup", "this.parent.setExclude();");
+                if (value) {
+                    text.onReady(function () {
+                        text.value = value;
+                    });
+                }
+                block.appendChild(text);
+                var close = document.createElement("i");
+                close.parent = el;
+                close.setAttribute("onclick",
+                    "this.parent.removeExclude(this.parentNode);"
+                );
+                close.classList.add("material-icons", "remove");
+                close.innerText = "clear";
+                block.appendChild(close);
+                el._refs.options.exclude.add(block);
             },
             setRefs: function () {
                 var el = this;
@@ -278,6 +410,10 @@
                 el._refs.toContainer = el.querySelector("#to-container");
                 el._refs.run = el.querySelector("#run");
                 el._refs.watch = el.querySelector("#watch");
+                el._refs.extra = el.querySelector("#extra");
+                el._refs.extraToggle = el.querySelector("#extraToggle");
+                el._refs.options = {};
+                el._refs.options.exclude = el.querySelector("component-add");
             },
             checkEnabled: function () {
                 var el = this;
@@ -291,7 +427,7 @@
             },
             watchListener: function () {
                 var el = this;
-                el._refs.watch.onCheck(function () {                    
+                el._refs.watch.onCheck(function () {
                     // TODO do watch
                     el.watch = "true";
                     el._watch();
@@ -300,12 +436,21 @@
                 el._refs.watch.onUncheck(function () {
                     // TODO stop watch
                     el.watch = "false";
+                    if (el._misc.currentWatcher) {
+                        el._misc.currentWatcher.close();
+                    }
                     el._saveData();
                 });
             },
-            watch: function(){
+            watch: function () {
                 var el = this;
-                io.watch(el.from, el.to);
+                var excl;
+                if (el.exclude && Array.isArray(el.exclude)) {
+                    excl = el.exclude;
+                }
+                el._misc.currentWatcher = io.watch(el.from, el.to, {
+                    exclude: excl
+                });
             },
             saveData: function () {
                 var el = this;
@@ -322,6 +467,11 @@
                     });
                 }
                 if (el.watch) {}
+                if (el.exclude && Array.isArray(el.exclude)) {
+                    el.exclude.forEach(function (element) {
+                        el._addExclude(element);
+                    });
+                }
             }
         },
 
