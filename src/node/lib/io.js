@@ -9,6 +9,9 @@ var cwd = process.cwd();
 // @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output]
 exports.run = function (from, to, options) {
     options = options || {};
+    if(options.exclude){
+        options.exclude = excludeDir(options.exclude);
+    }
     var files = io.getFiles(from, options);
     emptyDestSync(to);
     copyFiles(files, to);
@@ -87,12 +90,11 @@ exports.watch = function (from, to, options) {
     });
     watcher.on('unlinkDir', function (filePath, stat) {
         var length = to.length;
-            for (var i = 0; i < length; i++) {
-                // Relative output is where the template will be saved after parsed
-                var relativeOutput = getRelativeOutput(from, to[i], filePath, true);
-                fs.remove(path.join(relativeOutput, path.basename(filePath)), function () {
-                });
-            }
+        for (var i = 0; i < length; i++) {
+            // Relative output is where the template will be saved after parsed
+            var relativeOutput = getRelativeOutput(from, to[i], filePath, true);
+            fs.remove(path.join(relativeOutput, path.basename(filePath)), function () {});
+        }
     });
     watcher.on('error', function (error) {
         if (process.platform === 'win32' && error.code === 'EPERM') {
@@ -114,7 +116,7 @@ exports.watch = function (from, to, options) {
 function getRelativeOutput(from, output, filePath, deleted) {
     var relativeOutput;
     if (!Array.isArray(from)) {
-        if (io.isInPattern(filePath, from) || deleted) {            
+        if (io.isInPattern(filePath, from) || deleted) {
             var rootFromPattern = io.getRootFromPattern(from);
             // Relative output is where the template will be saved after parse
             relativeOutput = path.dirname(path.relative(rootFromPattern, filePath));
@@ -149,4 +151,15 @@ function isExcluded(excluded, filePath) {
         });
         return isIn;
     }
+}
+
+// @function excludeDir [Add magic to exclude folder]
+function excludeDir(exclude) {
+    var length = exclude.length;
+    for (var i = 0; i < length; i++) {
+        if(io.isDirectory(exclude[i])){
+            exclude[i] += "/**/*";
+        }
+    }
+    return exclude;
 }

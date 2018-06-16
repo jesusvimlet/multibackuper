@@ -5,42 +5,19 @@
         position: relative;
         box-sizing: border-box;
     }
-
-    backup-er #add {
-        width: 100%;
-        padding: 10px 20px 10px 20px;
-        box-sizing: border-box;
-        position: relative;
-        -webkit-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
-        box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.75);
-        z-index: 101;
-        background-color: #2d2d2d;
-    }
-
-    /* vc-scroll {
-        height: calc(100% - 58px) !important;
-    } */
-
-    backup-er #container {
-        padding: 10px 20px 0px 20px;
-        box-sizing: border-box;
-    }
 </style>
 
 <template>
-    <vc-button id="add" value="Add" onclick="document.querySelector('backup-er').add();"></vc-button>
-    <vc-scroll thickness="8">
-        <div id="container"></div>
-    </vc-scroll>
+    <component-add max-height="calc(100% - 50px)">
+    </component-add>
 </template>
 
 <script>
     vcomet.element("backup-er", null, {
 
         dependencies: [
-            "../../vcomet/ui/vc-button",
-            "../backup-folder"
+            "../backup-folder",
+            "../component-add"
         ],
 
         properties: {},
@@ -57,8 +34,9 @@
         functions: {
             add: function (key) {
                 var el = this;
-                    var data = el._refs.appcontainer.getData("backups");
+                var data = el._refs.appcontainer.getData("backups");
                 var backupFolder = document.createElement("backup-folder");
+                backupFolder.parent = el;
                 if (key) {
                     backupFolder.id = key;
                     backupFolder.from = data[key].from;
@@ -83,18 +61,18 @@
                     backupFolder.id = id;
                     el._refs.appcontainer.saveData("backups", data);
                 }
-                el._refs.container.appendChild(backupFolder);
+                el._refs.componentAdd.add(backupFolder);
             },
             updateData: function (backupFolder) {
                 var el = this;
                 var data = el._refs.appcontainer.getData("backups");
-                var currentData = {};                
+                var currentData = {};
                 currentData.from = backupFolder.from;
                 currentData.to = backupFolder.to;
                 currentData.watch = backupFolder.watch;
                 currentData.exclude = backupFolder.exclude;
                 data[backupFolder.id] = currentData;
-                el._refs.appcontainer.saveData("backups", data);                                
+                el._refs.appcontainer.saveData("backups", data);
             }
         },
 
@@ -102,14 +80,17 @@
             init: function () {
                 var el = this;
                 el._setRefs();
-                var data = el._refs.appcontainer.getData("backups");                
+                var data = el._refs.appcontainer.getData("backups");
+                el._refs.componentAdd.onadd(function () {
+                    el.add();
+                });
                 for (var key in data) {
                     el.add(key);
                 }
             },
             setRefs: function () {
                 var el = this;
-                el._refs.container = el.querySelector("#container");
+                el._refs.componentAdd = el.querySelector("component-add");
                 el._refs.appcontainer = document.querySelector("app-container");
             }
         },

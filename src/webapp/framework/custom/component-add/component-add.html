@@ -4,7 +4,7 @@
         height: 100%;
         position: relative;
         box-sizing: border-box;
-    background-color: #3a3a3a;
+        background-color: #3a3a3a;
     }
 
     #component-add-add {
@@ -19,17 +19,33 @@
         background-color: #2d2d2d;
     }
 
+    #component-add-add-icon {
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        display: none;
+        height: 100%;
+        margin-bottom:5px;
+    }
+
+    #component-add-add-icon:hover {
+        color: #18c796;
+        /* border:#18c796 1px solid; */
+    }
+
     #component-add-container {
-        padding: 10px 20px 0px 20px;
+        padding: 5px 10px 0px 10px;
         box-sizing: border-box;
     }
 </style>
 
 <template>
-    <vc-button id="component-add-add" value="Add" onclick="this.parentNode._add();"></vc-button>
+    <vc-button id="component-add-add" value="Add" onclick="this.parentNode._add();">
+    </vc-button>
     <vc-scroll thickness="8">
         <div id="component-add-container"></div>
     </vc-scroll>
+    <i class="material-icons" id="component-add-add-icon" onclick="this.parentNode._add();">add</i>
 </template>
 
 <script>
@@ -40,9 +56,17 @@
         ],
 
         properties: {
-            maxHeight:{
-                value:"300px",
-                reflect:true
+            maxHeight: {
+                value: "300px",
+                reflect: true
+            },
+            insert: { // Add childs top or bottom
+                value: "top",
+                reflect: true
+            },
+            bigButton: { // Big add button. Just icon is false
+                value: "true",
+                reflect: true
             }
         },
 
@@ -57,12 +81,16 @@
 
         functions: {
             add: function (child) {
-                var el = this;                
-                el._refs.container.appendChild(child);
+                var el = this;
+                if (el.insert != "top") {
+                    el._refs.container.appendChild(child);
+                } else {
+                    el._refs.container.insertBefore(child, el._refs.container.firstChild);
+                }
             },
-            getChilds: function(){
-                var el = this; 
-                return el._refs.container.childNodes;         
+            getChilds: function () {
+                var el = this;
+                return el._refs.container.childNodes;
             }
         },
 
@@ -71,25 +99,32 @@
                 var el = this;
                 el._setRefs();
                 el._setMaxHeight();
+                if (el.bigButton === "false") {
+                    el._refs.addButton.style.display = "none";
+                    el._refs.addIcon.style.display = "block";
+                }
             },
             setRefs: function () {
                 var el = this;
+                el._refs.addButton = el.querySelector("#component-add-add");
+                el._refs.addIcon = el.querySelector("#component-add-add-icon");
                 el._refs.container = el.querySelector("#component-add-container");
                 el._refs.scroll = el.querySelector("vc-scroll");
+
             },
-            add:function(){
-                var el = this;                
+            add: function () {
+                var el = this;
                 vcomet.triggerCallback('onadd', el, el, [el]);
             },
-            setMaxHeight:function(){
-                var el = this;   
+            setMaxHeight: function () {
+                var el = this;
                 el._refs.scroll.style.maxHeight = el.maxHeight;
             }
         },
 
         onCreated: function () {
             vcomet.createCallback("onadd", this);
-            },
+        },
 
         onReady: function () {
             var el = this;
