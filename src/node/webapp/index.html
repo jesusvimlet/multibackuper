@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Backuper</title>
+    <script src="framework/vcomet/vcomet.js"></script>
+    <link rel="stylesheet" href="framework/materialIcons/material-icons.css">
+    <script>
+        vcomet.import([
+            "framework/custom/app-container",
+            "framework/custom/backup-er"
+        ]);
+    </script>
+    <script>
+        var store = require('../lib/store.js').instance();
+        const {
+            ipcRenderer
+        } = require('electron');
+         const {dialog} = require('electron').remote;
+         var io = require('../lib/io.js');
+    </script>
+</head>
+
+<body>
+    <app-container title="Backup-ER">
+        <backup-er></backup-er>
+    </app-container>
+    <script>
+        vcomet.onReady(function () {
+            var appContainer = document.querySelector("app-container");
+            var menu = [];
+            var exit = {};
+            exit.title = "Exit";
+            exit.onclick = function () {
+                document.querySelector("app-container").exit();
+            };
+            menu.push(exit);
+            appContainer.setMenu(menu);
+        });
+    </script>
+</body>
+
+</html>

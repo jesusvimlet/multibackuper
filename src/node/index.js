@@ -15,9 +15,9 @@ var shell = require('electron').shell;
 
 
 // Restart on js changes
-require('electron-reload')(__dirname, {
-    electron: require(`${__dirname}/node_modules/electron`)
-});
+// require('electron-reload')(__dirname, {
+//     electron: require(`${__dirname}/node_modules/electron`)
+// });
 
 
 let win;
@@ -62,19 +62,19 @@ function createWindow() {
 
     // and load the index.html of the app.
     win.loadURL(url.format({
-        pathname: path.join(__dirname, '../webapp/index.html'),
+        pathname: path.join(__dirname, 'webapp/index.html'),
         protocol: 'file:',
         slashes: true
     }));
 
 
     
-        globalShortcut.register('f5', function () { // TODO f5 to refresh html content
-            // win.reload();
-            reload();
-        });
-        // Open the DevTools.
-        win.webContents.openDevTools(); //TODO Open inspector
+        // globalShortcut.register('f5', function () { // TODO f5 to refresh html content
+        //     // win.reload();
+        //     reload();
+        // });
+        // // Open the DevTools.
+        // win.webContents.openDevTools(); //TODO Open inspector
     
 
 
@@ -115,7 +115,7 @@ function createWindow() {
         label: 'Exit',
         role: "quit"
     }]);
-    tray.setToolTip('Multi-Server');
+    tray.setToolTip('Multi-Backup');
     tray.setContextMenu(contextMenu);
 
     tray.on('click', () => {
