@@ -1,7 +1,4 @@
-# Multibackuper
-
-# WIP
-## Do not use until next version, current 0.0.1
+# Multibackup
 
 
 This application allows the user to clone a project into several folders to have it as a backup in case of HD error, system crash or whatever happen that results in the lost of the working directory.
@@ -14,16 +11,10 @@ This application allows the user to clone a project into several folders to have
 
 ### Clone
 
-Multibackuper actually clone the project, it does not keep a history of previous changes so if watch mode is enabled modification are stored in real time meaning that **revert is not possible from the backups**.
+Multibackup actually clone the project, it does not keep a history of previous changes so if watch mode is enabled modification are stored in real time meaning that **revert is not possible from the backups**.
 
 
-## TODO
-
-* Watcher still not done.
-* Exclude subfolders from backups.
-
-
-## Desirables
+## Future updates
 
 * Allow to save previous versions of the project.
 * Start with OS.

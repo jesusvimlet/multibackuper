@@ -1,0 +1,11 @@
+directories:
+  output: ../../release
+  buildResources: build
+appId: com.backuper.app
+win:
+  target: zip
+linux:
+  target: zip
+mac:
+  target: zip
+electronVersion: 1.8.7
