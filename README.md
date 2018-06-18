@@ -1,7 +1,8 @@
 # Multibackup
 
-
 This application allows the user to clone a project into several folders to have it as a backup in case of HD error, system crash or whatever happen that results in the lost of the working directory.
+
+![MultiBackup](multibackup.png)
 
 ## Features
 
