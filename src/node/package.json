@@ -1,6 +1,6 @@
 {
-  "name": "multibackuper",
-  "productName": "Multibackuper",
+  "name": "multibackup",
+  "productName": "Multibackup",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

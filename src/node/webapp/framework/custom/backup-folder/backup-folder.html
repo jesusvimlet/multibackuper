@@ -135,6 +135,44 @@
         width: 100;
         height: auto;
     }
+
+    backup-folder .runAnim {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #18c796;
+        width: 20px;
+        height: 20px;
+        margin-top: 5px;
+        margin-left: 10px;
+        -webkit-animation: spin 2s linear infinite;
+        /* Safari */
+        animation: spin 2s linear infinite;
+    }
+
+    backup-folder .hidden {
+        display: none;
+    }
+
+
+    /* Safari */
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 
 <template>
@@ -145,6 +183,7 @@
                 <vc-toggle label="Keep watching" disabled="true" id="watch"></vc-toggle>
             </div>
         </div>
+        <div class="runAnim hidden"></div>
         <i class="material-icons remove" id="remove" onclick="this.parentNode.parentNode.remove();">clear</i>
     </div>
 
@@ -229,10 +268,10 @@
                     }
                     io.run(el.from, el.to, {
                         exclude: excl
-                    });
+                    }, el._toggleRunAnim());
+                    el._toggleRunAnim();
                 } else {
                     console.log("Bad configuration");
-
                 }
             },
             remove: function () {
@@ -367,6 +406,18 @@
                     el._addExclude();
                 });
             },
+            toggleRunAnim() {
+                var el = this;
+                if (el._refs.runAnim.classList.contains("hidden")) {
+                    el._refs.runAnim.classList.remove("hidden");
+                    el._refs.run.disabled = true;
+                } else {
+                    setTimeout(function () {
+                        el._refs.runAnim.classList.add("hidden");
+                    el._refs.run.disabled = false;
+                    }, 500);
+                }
+            },
             addExclude: function (value) {
                 var el = this;
                 var block = document.createElement("div");
@@ -414,6 +465,7 @@
                 el._refs.extraToggle = el.querySelector("#extraToggle");
                 el._refs.options = {};
                 el._refs.options.exclude = el.querySelector("#extra").querySelector("component-add");
+                el._refs.runAnim = el.querySelector(".runAnim");
             },
             checkEnabled: function () {
                 var el = this;
@@ -468,14 +520,14 @@
                     el.to.forEach(function (element) {
                         el.addTo(element);
                     });
-                }else{
+                } else {
                     el.addTo();
                 }
                 if (el.exclude && Array.isArray(el.exclude) && el.exclude.length > 0) {
                     el.exclude.forEach(function (element) {
                         el._addExclude(element);
                     });
-                }else{
+                } else {
                     el._addExclude();
                 }
                 if (el.watch && el.watch != "false") {

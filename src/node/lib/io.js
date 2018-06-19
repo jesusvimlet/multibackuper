@@ -6,24 +6,37 @@ var glob = require("glob");
 
 var cwd = process.cwd();
 
-// @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output]
-exports.run = function (from, to, options) {
+// @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output] @param callback
+exports.run = function (from, to, options, callback) {
     options = options || {};
-    if(options.exclude){
+    if (options.exclude) {
         options.exclude = excludeDir(options.exclude);
     }
     var files = io.getFiles(from, options);
     emptyDestSync(to);
-    copyFiles(files, to);
+    copyFiles(files, to, callback);
 };
 
 // @function copyFiles (private) [Copy files to several folders] @param files {object} [Object containing root and relative paths] @param to {string[]} 
-function copyFiles(files, to) {
+function copyFiles(files, to, callback) {
+    // Total files to copy
+    var totalFiles = 0;
+    for (var key in files) {
+        files[key].files.forEach(function (file) {
+            totalFiles++;  
+        });
+    }
+    totalFiles = totalFiles * to.length;       // Total files * number of clone destinations
     for (var key in files) {
         files[key].files.forEach(function (file) {
             var length = to.length;
             for (var i = 0; i < length; i++) {
-                fs.copy(path.join(files[key].root, file), path.join(to[i], file));
+                fs.copy(path.join(files[key].root, file), path.join(to[i], file), function () {
+                    totalFiles--;
+                    if(totalFiles <= 0 && callback){
+                        callback();
+                    }
+                });
             }
         });
     }
@@ -157,7 +170,7 @@ function isExcluded(excluded, filePath) {
 function excludeDir(exclude) {
     var length = exclude.length;
     for (var i = 0; i < length; i++) {
-        if(io.isDirectory(exclude[i])){
+        if (io.isDirectory(exclude[i])) {
             exclude[i] += "/**/*";
         }
     }

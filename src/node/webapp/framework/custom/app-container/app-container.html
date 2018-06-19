@@ -271,13 +271,13 @@
                 el._refs.menuButton = el.querySelector("#menuButton");
                 el._refs.menuBox = el.querySelector("#menuBox");
                 el._refs.menuWrap = el.querySelector("#menuWrap");
-            el._refs.content = document.querySelector("#content");
+                el._refs.content = document.querySelector("#content");
             },
             setStructure: function () {
                 var el = this;
                 var inner = document.createElement("div");
-                var children = el.childNodes;
-                children.forEach(function(ch){
+                var children = el.childNodes;                
+                children.forEach(function (ch) {
                     inner.appendChild(ch);
                 });
                 el.innerHTML = "";
@@ -339,11 +339,13 @@
                 el.appendChild(menuWrap);
                 var content = document.createElement("div");
                 content.id = "content";
-                var childrenSaved = inner.childNodes;                
-                childrenSaved.forEach(function(ch){                    
+                var childrenSaved = inner.childNodes;
+                childrenSaved.forEach(function (ch) {
                     content.appendChild(ch);
                 });
-                el.appendChild(content);
+                setTimeout(function () {
+                    el.appendChild(content);
+                }, 0);
             }
         },
 

@@ -73,6 +73,27 @@
                 currentData.exclude = backupFolder.exclude;
                 data[backupFolder.id] = currentData;
                 el._refs.appcontainer.saveData("backups", data);
+            },
+            runAll:function(){
+                var el = this;
+                var backupFolders = el.querySelectorAll("backup-folder");
+                backupFolders.forEach(function(bF){
+                    bF.run();
+                });                
+            },
+            watchAll:function(){
+                var el = this;
+                var backupFolders = el.querySelectorAll("backup-folder");
+                backupFolders.forEach(function(bF){
+                    bF._refs.watch.checked = true;
+                });                
+            },
+            stopWatchAll:function(){
+                var el = this;
+                var backupFolders = el.querySelectorAll("backup-folder");
+                backupFolders.forEach(function(bF){
+                    bF._refs.watch.checked = false;
+                });                            
             }
         },
 

@@ -9,7 +9,8 @@
     <script>
         vcomet.import([
             "framework/custom/app-container",
-            "framework/custom/backup-er"
+            "framework/custom/backup-er",
+            "framework/vcomet/ui/vc-dialog"
         ]);
     </script>
     <script>
@@ -17,15 +18,38 @@
         const {
             ipcRenderer
         } = require('electron');
-         const {dialog} = require('electron').remote;
-         var io = require('../lib/io.js');
+        const {
+            dialog
+        } = require('electron').remote;
+        var io = require('../lib/io.js');
+    const shell = require('electron').shell;
     </script>
+    <style>
+        .credits-link{
+        text-decoration: underline;
+        color: blue;
+        cursor: pointer;
+        display: inline-block;
+        }
+    </style>
 </head>
 
 <body>
-    <app-container title="Backup-ER">
+    <app-container title="Multi - Backup">
         <backup-er></backup-er>
     </app-container>
+    <vc-dialog id="creditsDialog" heading="Credits" modal="true" blur="true">
+        <vc-section type="content">
+            <span>This is the second application developed using
+                <div class="credits-link" onclick="shell.openExternal('https://vimlet.com/vcomet');">vComet</div>.</br>
+                </br>
+                It is licensed under MIT license.</br>
+                </br>
+                Developed by
+                <div class="credits-link" onclick="shell.openExternal('http://jperefel.com');">Jesús Pérez Felipe</div>.</br>
+            </span>
+        </vc-section>
+    </vc-dialog>
     <script>
         vcomet.onReady(function () {
             var appContainer = document.querySelector("app-container");
@@ -35,6 +59,30 @@
             exit.onclick = function () {
                 document.querySelector("app-container").exit();
             };
+            credits = {};
+            credits.title = "Credits";
+            credits.onclick = function () {
+                document.querySelector('#creditsDialog').open();
+            }
+            runAll = {};
+            runAll.title = "Run all";
+            runAll.onclick = function () {
+                document.querySelector('backup-er').runAll();
+            }
+            watchAll = {};
+            watchAll.title = "Watch all";
+            watchAll.onclick = function () {
+                document.querySelector('backup-er').watchAll();
+            }
+            stopWatchAll = {};
+            stopWatchAll.title = "Stop watching all";
+            stopWatchAll.onclick = function () {
+                document.querySelector('backup-er').stopWatchAll();
+            }
+            menu.push(runAll);
+            menu.push(watchAll);
+            menu.push(stopWatchAll);
+            menu.push(credits);
             menu.push(exit);
             appContainer.setMenu(menu);
         });
