@@ -25,8 +25,8 @@ Multibackup actually clone the project, it does not keep a history of previous c
 
 1. Download from /release:
 
-    * [Windows](https://github.com/jesusvimlet/multibackuper/raw/master/release/Multibackuper-1.0.0-win.zip)
-    * [Linux](https://github.com/jesusvimlet/multibackuper/raw/master/release/multibackuper-1.0.0.zip)
+    * [Windows](https://github.com/jesusvimlet/multibackuper/raw/master/release/Multibackup-1.0.0-win.zip)
+    * [Linux](https://github.com/jesusvimlet/multibackuper/raw/master/release/multibackup-1.0.0.zip)
 
 2. Unzip wherever you want.
 
