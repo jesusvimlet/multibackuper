@@ -15,9 +15,9 @@ var shell = require('electron').shell;
 
 
 // Restart on js changes
-// require('electron-reload')(__dirname, {
-//     electron: require(`${__dirname}/node_modules/electron`)
-// });
+require('electron-reload')(__dirname, {
+    electron: require(`${__dirname}/node_modules/electron`)
+});
 
 
 let win;
@@ -69,12 +69,12 @@ function createWindow() {
 
 
     
-        // globalShortcut.register('f5', function () { // TODO f5 to refresh html content
-        //     // win.reload();
-        //     reload();
-        // });
-        // // Open the DevTools.
-        // win.webContents.openDevTools(); //TODO Open inspector
+        globalShortcut.register('f5', function () { // TODO f5 to refresh html content
+            // win.reload();
+            reload();
+        });
+        // Open the DevTools.
+        win.webContents.openDevTools(); //TODO Open inspector
     
 
 

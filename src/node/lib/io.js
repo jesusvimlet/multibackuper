@@ -2,11 +2,14 @@ var path = require("path");
 var fs = require("fs-extra");
 var watch = require("glob-watcher");
 var io = require("@vimlet/io");
+var vCompress = require("@vimlet/compress");
 var glob = require("glob");
 
 var cwd = process.cwd();
 
-// @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output] @param callback
+var versionsFolder = "mb_versions";
+
+// @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output] @param options [exclude: exclude patterns from backup] @param callback
 exports.run = function (from, to, options, callback) {
     options = options || {};
     if (options.exclude) {
@@ -17,41 +20,7 @@ exports.run = function (from, to, options, callback) {
     copyFiles(files, to, callback);
 };
 
-// @function copyFiles (private) [Copy files to several folders] @param files {object} [Object containing root and relative paths] @param to {string[]} 
-function copyFiles(files, to, callback) {
-    // Total files to copy
-    var totalFiles = 0;
-    for (var key in files) {
-        files[key].files.forEach(function (file) {
-            totalFiles++;  
-        });
-    }
-    totalFiles = totalFiles * to.length;       // Total files * number of clone destinations
-    for (var key in files) {
-        files[key].files.forEach(function (file) {
-            var length = to.length;
-            for (var i = 0; i < length; i++) {
-                fs.copy(path.join(files[key].root, file), path.join(to[i], file), function () {
-                    totalFiles--;
-                    if(totalFiles <= 0 && callback){
-                        callback();
-                    }
-                });
-            }
-        });
-    }
-}
-
-
-// @function emptyDestSync (private) [Empty folder]
-function emptyDestSync(to) {
-    var length = to.length;
-    for (var i = 0; i < length; i++) {
-        fs.emptyDirSync(to[i]);
-    }
-}
-
-// @function watch (public) {object} [Keep watching folder for changes] @param from {string} @param to {string[]} @param options [exclude]
+// @function watch (public) {object} [Keep watching folder for changes] @param from {string} @param to {string[]} @param options [exclude: exclude patterns from backup]
 exports.watch = function (from, to, options) {
     options = options || {};
     exports.run(from, to, options); // Copy before watching
@@ -119,6 +88,66 @@ exports.watch = function (from, to, options) {
     return watcher;
 }
 
+
+// @function run (public) [Copy files from a folder to as many folder as de user wants] @param from {string} @param to {[string]} [Array with multiple paths as output] @param version [Version name, delete if exists] @param options [description: Description of the version. exclude: exclude patterns from backup] @param callback
+exports.version = function (from, to, version, options, callback) {
+    options = options || {};
+    if (options.exclude) {
+        options.exclude = excludeDir(options.exclude);
+    }
+    var files = io.getFiles(from, options);
+    version = version || "0.0.1";
+
+    var temporal = path.join(cwd, version);
+    emptyDestSync([temporal]);
+
+    fs.ensureDir(temporal, function (error) {
+        if (error) {
+            console.log("Error saving version");
+        }
+        var subTemporalPath = path.join(temporal, version);
+        fs.ensureDir(subTemporalPath, function (error) {
+            if (error) {
+                console.log("Error saving version");
+            }
+            if (options.description) {
+                var descriptionOutput = path.join(temporal, "description.txt");
+                io.writeToDisk(descriptionOutput, options.description, function () {
+                    var finalFile = path.resolve(path.join(temporal, version) + ".zip");
+                    copyFiles(files, [subTemporalPath], function () {
+                        vCompress.pack(subTemporalPath, finalFile, "zip", {
+                            "doneHandler": function () {
+                                io.deleteFolderRecursiveSync(subTemporalPath);
+                                var length = to.length;
+                                for (var i = 0; i < length; i++) {
+                                    io.deleteFolderRecursiveSync(path.join(to[i], versionsFolder, version));
+                                    fs.copySync(temporal, path.join(to[i], versionsFolder, version));
+                                    io.deleteFolderRecursiveSync(temporal);
+                                }
+                            }
+                        });
+                    });
+                });
+            } else {
+                var finalFile = path.resolve(path.join(temporal, version) + ".zip");
+                copyFiles(files, [subTemporalPath], function () {
+                    vCompress.pack(subTemporalPath, finalFile, "zip", {
+                        "doneHandler": function () {
+                            io.deleteFolderRecursiveSync(subTemporalPath);
+                            var length = to.length;
+                            for (var i = 0; i < length; i++) {
+                                io.deleteFolderRecursiveSync(path.join(to[i], versionsFolder, version));
+                                fs.copySync(temporal, path.join(to[i], versionsFolder, version));
+                                io.deleteFolderRecursiveSync(temporal);
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    });
+};
+
 /*
 @function getRelativeOutput [Get path relative to output]
 @param from [from patterns]
@@ -175,4 +204,39 @@ function excludeDir(exclude) {
         }
     }
     return exclude;
+}
+
+
+// @function copyFiles (private) [Copy files to several folders] @param files {object} [Object containing root and relative paths] @param to {string[]} 
+function copyFiles(files, to, callback) {
+    // Total files to copy
+    var totalFiles = 0;
+    for (var key in files) {
+        files[key].files.forEach(function (file) {
+            totalFiles++;
+        });
+    }
+    totalFiles = totalFiles * to.length; // Total files * number of clone destinations
+    for (var key in files) {
+        files[key].files.forEach(function (file) {
+            var length = to.length;
+            for (var i = 0; i < length; i++) {
+                fs.copy(path.join(files[key].root, file), path.join(to[i], file), function () {
+                    totalFiles--;
+                    if (totalFiles <= 0 && callback) {
+                        callback();
+                    }
+                });
+            }
+        });
+    }
+}
+
+
+// @function emptyDestSync (private) [Empty folder]
+function emptyDestSync(to) {
+    var length = to.length;
+    for (var i = 0; i < length; i++) {
+        fs.emptyDirSync(to[i]);
+    }
 }

@@ -183,6 +183,7 @@
                 <vc-toggle label="Keep watching" disabled="true" id="watch"></vc-toggle>
             </div>
         </div>
+        <vc-button id="version" value="Save Version" onclick="this.parentNode.parentNode.openVersionDialog();"></vc-button>
         <div class="runAnim hidden"></div>
         <i class="material-icons remove" id="remove" onclick="this.parentNode.parentNode.remove();">clear</i>
     </div>
@@ -205,6 +206,15 @@
         <component-add max-height="100px" big-button="false" insert="bottom">
         </component-add>
     </div>
+    <vc-dialog id="saveVersion" heading="Save version" modal="true" blur="true" parent="this.parentNode">
+        <vc-section type="content" style="display:flex; flex-direction:column;">
+            <vc-text label="Version:" placeholder="0.0.1" id="saveBackupVersion"></vc-text>
+            <vc-text label="Description:" type="area" area-height="150" placeholder="none" id="saveBackupDescription"></vc-text>
+        </vc-section>
+        <vc-section type="footer">
+            <vc-button value="Save" id="saveBackup"></vc-button>
+        </vc-section>
+    </vc-dialog>
 </template>
 
 <script>
@@ -213,6 +223,7 @@
         dependencies: [
             "../../vcomet/ui/vc-text",
             "../../vcomet/ui/vc-toggle",
+            "../../vcomet/ui/vc-dialog",
             "../component-add"
         ],
 
@@ -273,6 +284,21 @@
                 } else {
                     console.log("Bad configuration");
                 }
+            },
+            saveVersion: function () {
+                var el = this;
+                var excl;
+                if (el.exclude && Array.isArray(el.exclude)) {
+                    excl = el.exclude;
+                }
+                io.version(el.from, el.to, el._refs.saveBackupVersion.value, {
+                    description: el._refs.saveBackupDescription.value,
+                    exclude: excl
+                }, el._refs.saveVersion.close());
+            },
+            openVersionDialog: function () {
+                var el = this;
+                el._refs.saveVersion.open();
             },
             remove: function () {
                 var el = this;
@@ -405,6 +431,9 @@
                 el._refs.options.exclude.onadd(function () {
                     el._addExclude();
                 });
+                el._refs.saveBackup.addEventListener("click", function () {
+                    el.saveVersion();
+                });
             },
             toggleRunAnim() {
                 var el = this;
@@ -414,7 +443,7 @@
                 } else {
                     setTimeout(function () {
                         el._refs.runAnim.classList.add("hidden");
-                    el._refs.run.disabled = false;
+                        el._refs.run.disabled = false;
                     }, 500);
                 }
             },
@@ -466,6 +495,10 @@
                 el._refs.options = {};
                 el._refs.options.exclude = el.querySelector("#extra").querySelector("component-add");
                 el._refs.runAnim = el.querySelector(".runAnim");
+                el._refs.saveVersion = el.querySelector("#saveVersion");
+                el._refs.saveBackup = el.querySelector("#saveBackup");
+                el._refs.saveBackupVersion = el.querySelector("#saveBackupVersion");
+                el._refs.saveBackupDescription = el.querySelector("#saveBackupDescription");
             },
             checkEnabled: function () {
                 var el = this;
