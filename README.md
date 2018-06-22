@@ -21,6 +21,8 @@ Multibackup actually clone the project, it does not keep a history of previous c
 * Allow to save previous versions of the project.
 * Start with OS.
 
+    **Done for Windows.**
+
 ## Installation
 
 1. Download from /release:
