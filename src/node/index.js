@@ -13,11 +13,10 @@ const nativeImage = require('electron').nativeImage;
 const store = require('./lib/store.js').instance();
 var shell = require('electron').shell;
 
-
 // Restart on js changes
-require('electron-reload')(__dirname, {
-    electron: require(`${__dirname}/node_modules/electron`)
-});
+// require('electron-reload')(__dirname, {
+//     electron: require(`${__dirname}/node_modules/electron`)
+// });
 
 
 let win;
@@ -46,6 +45,11 @@ ipcMain.on('asynchronous-message', (event, arg) => {
     }
 });
 
+
+ipcMain.on('set-tray', (event, arg) => {   
+    updateTray(arg);
+});
+
 function createWindow() {
     var savedSize = store.get('windowBounds') || {
         width: 800,
@@ -68,14 +72,14 @@ function createWindow() {
     }));
 
 
-    
-        globalShortcut.register('f5', function () { // TODO f5 to refresh html content
-            // win.reload();
-            reload();
-        });
-        // Open the DevTools.
-        win.webContents.openDevTools(); //TODO Open inspector
-    
+
+    // globalShortcut.register('f5', function () { // TODO f5 to refresh html content
+    //     // win.reload();
+    //     reload();
+    // });
+    // // Open the DevTools.
+    // win.webContents.openDevTools(); //TODO Open inspector
+
 
 
     // Emitted when the window is closed.
@@ -108,19 +112,72 @@ function createWindow() {
 
 
     // Tray
+    setTray("-");
+}
+
+function setTray(trayLog){
     const iconPath = path.join(__dirname, 'icon.ico');
     const trayIcon = nativeImage.createFromPath(iconPath);
     tray = new Tray(trayIcon);
-    const contextMenu = Menu.buildFromTemplate([{
-        label: 'Exit',
-        role: "quit"
-    }]);
+    var contextMenu = Menu.buildFromTemplate([{
+            label: "Run all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").runAll();')
+            }
+        }, {
+            label: "Watch all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").watchAll();')
+            }
+        }, {
+            label: "Stop watching all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").stopWatchAll();')
+            }
+        },
+        {
+            type: 'separator'
+        }, {
+            label: 'Exit',
+            role: "quit"
+        }
+    ]);
     tray.setToolTip('Multi-Backup');
     tray.setContextMenu(contextMenu);
-
+    
     tray.on('click', () => {
         win.isVisible() ? win.hide() : win.show()
     });
+}
+function updateTray(trayLog){
+    var contextMenu = Menu.buildFromTemplate([{
+            label: trayLog
+        }, {
+            type: 'separator'
+        }, {
+            label: "Run all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").runAll();')
+            }
+        }, {
+            label: "Watch all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").watchAll();')
+            }
+        }, {
+            label: "Stop watching all",
+            click() {
+                win.webContents.executeJavaScript('document.querySelector("backup-er").stopWatchAll();')
+            }
+        },
+        {
+            type: 'separator'
+        }, {
+            label: 'Exit',
+            role: "quit"
+        }
+    ]);
+    tray.setContextMenu(contextMenu);    
 }
 
 
@@ -136,7 +193,7 @@ app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
         app.quit();
     }
-})
+});
 
 app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -144,4 +201,11 @@ app.on('activate', function () {
     if (win === null) {
         createWindow();
     }
-})
+});
+
+var settings = store.get('settings') || {
+    "openAtLogin": false,
+    "openAsHidden ": false
+};
+
+app.setLoginItemSettings(settings);

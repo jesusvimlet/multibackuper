@@ -22,24 +22,29 @@
             dialog
         } = require('electron').remote;
         var io = require('../lib/io.js');
-    const shell = require('electron').shell;
+        const shell = require('electron').shell;
     </script>
     <style>
-        .credits-link{
-        text-decoration: underline;
-        color: blue;
-        cursor: pointer;
-        display: inline-block;
+        .credits-link {
+            text-decoration: underline;
+            color: blue;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .vc-dialog-dialog .vc-scroll-content vc-section {
+            flex-direction: column;
+            display: flex;
         }
     </style>
 </head>
 
 <body>
-    <app-container title="Multi - Backup">
+    <app-container heading="Multi - Backup">
         <backup-er></backup-er>
     </app-container>
     <vc-dialog id="creditsDialog" heading="Credits" modal="true" blur="true">
-        <vc-section type="content">
+        <vc-section type="content" id="settingsSection">
             <span>This is the second application developed using
                 <div class="credits-link" onclick="shell.openExternal('https://vimlet.com/vcomet');">vComet</div>.</br>
                 </br>
@@ -48,6 +53,14 @@
                 Developed by
                 <div class="credits-link" onclick="shell.openExternal('http://jperefel.com');">Jesús Pérez Felipe</div>.</br>
             </span>
+        </vc-section>
+    </vc-dialog>
+    <vc-dialog id="settingsDialog" heading="Settings" modal="true" blur="true">
+        <vc-section type="content">
+        </br>
+            <vc-toggle id="settingsStartWindow" label="Start with Windows"></vc-toggle>
+        </br>
+            <vc-toggle id="settingsStartAsHidden" label="Start minimized"></vc-toggle>
         </vc-section>
     </vc-dialog>
     <script>
@@ -63,6 +76,35 @@
             credits.title = "Credits";
             credits.onclick = function () {
                 document.querySelector('#creditsDialog').open();
+            }
+            settings = {};
+            settings.title = "Settings";
+            settings.onclick = function () {
+                var settings = store.get("settings") || {
+                    "openAtLogin": false,
+                    "openAsHidden ": false
+                };
+                document.querySelector('#settingsDialog').open();
+                var startWithWindows = document.querySelector('#settingsStartWindow');
+                startWithWindows.checked = settings["openAtLogin"];
+                startWithWindows.onCheck(function () {
+                    settings["openAtLogin"] = true;
+                    store.set("settings", settings);
+                });
+                startWithWindows.onUncheck(function () {
+                    settings["openAtLogin"] = false;
+                    store.set("settings", settings);
+                });
+                var startAsHidden = document.querySelector('#settingsStartAsHidden');
+                startAsHidden.checked = settings["openAsHidden"];
+                startAsHidden.onCheck(function () {
+                    settings["openAsHidden"] = true;
+                    store.set("settings", settings);
+                });
+                startAsHidden.onUncheck(function () {
+                    settings["openAsHidden"] = false;
+                    store.set("settings", settings);
+                });
             }
             runAll = {};
             runAll.title = "Run all";
@@ -82,6 +124,7 @@
             menu.push(runAll);
             menu.push(watchAll);
             menu.push(stopWatchAll);
+            menu.push(settings);
             menu.push(credits);
             menu.push(exit);
             appContainer.setMenu(menu);

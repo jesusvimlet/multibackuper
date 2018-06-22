@@ -45,6 +45,7 @@ exports.watch = function (from, to, options) {
                 var relativeOutput = getRelativeOutput(from, to[i], filePath);
                 fs.copy(filePath, path.join(relativeOutput, path.basename(filePath)));
             }
+            onWatch(from);
         }
     });
     watcher.on('add', function (filePath, stat) {
@@ -55,6 +56,7 @@ exports.watch = function (from, to, options) {
                 var relativeOutput = getRelativeOutput(from, to[i], filePath);
                 fs.copy(filePath, path.join(relativeOutput, path.basename(filePath)));
             }
+            onWatch(from);
         }
     });
     watcher.on('unlink', function (filePath, stat) {
@@ -68,6 +70,7 @@ exports.watch = function (from, to, options) {
                     fs.unlinkSync(parsedPath);
                 }
             }
+            onWatch(from);
         }
     });
     watcher.on('unlinkDir', function (filePath, stat) {
@@ -77,6 +80,7 @@ exports.watch = function (from, to, options) {
             var relativeOutput = getRelativeOutput(from, to[i], filePath, true);
             fs.remove(path.join(relativeOutput, path.basename(filePath)), function () {});
         }
+        onWatch(from);
     });
     watcher.on('error', function (error) {
         if (process.platform === 'win32' && error.code === 'EPERM') {
@@ -86,6 +90,10 @@ exports.watch = function (from, to, options) {
         }
     });
     return watcher;
+};
+
+function onWatch(from){
+    document.querySelector("backup-er").updateLog(from);
 }
 
 
@@ -116,6 +124,7 @@ exports.version = function (from, to, version, options, callback) {
                     var finalFile = path.resolve(path.join(temporal, version) + ".zip");
                     copyFiles(files, [subTemporalPath], function () {
                         vCompress.pack(subTemporalPath, finalFile, "zip", {
+                            "outputHandler": function(){console.log("output")},
                             "doneHandler": function () {
                                 io.deleteFolderRecursiveSync(subTemporalPath);
                                 var length = to.length;
@@ -132,6 +141,7 @@ exports.version = function (from, to, version, options, callback) {
                 var finalFile = path.resolve(path.join(temporal, version) + ".zip");
                 copyFiles(files, [subTemporalPath], function () {
                     vCompress.pack(subTemporalPath, finalFile, "zip", {
+                        "outputHandler": function(){console.log("output")},
                         "doneHandler": function () {
                             io.deleteFolderRecursiveSync(subTemporalPath);
                             var length = to.length;

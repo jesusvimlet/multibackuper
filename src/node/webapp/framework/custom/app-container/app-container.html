@@ -196,7 +196,7 @@
     vcomet.element("app-container", null, {
 
         properties: {
-            title: {
+            heading: {
                 value: "",
                 reflect: true
             }
@@ -264,7 +264,7 @@
             init: function () {
                 var el = this;
                 el._setRefs();
-                el.querySelector("#menuTitle").innerText = el.title;
+                el.querySelector("#menuTitle").innerText = el.heading;
             },
             setRefs: function () {
                 var el = this;

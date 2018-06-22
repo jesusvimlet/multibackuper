@@ -5,11 +5,27 @@
         position: relative;
         box-sizing: border-box;
     }
+
+    #backup-er-log {
+        background-color: #2d2d2d;
+        color: #464646;
+        height: 50px;
+        width: 100%;
+        line-height: 50px;
+        padding: 0px 10px 0px 10px;
+        box-sizing: border-box;
+        display:flex;
+        flex-direction: row;
+    }
+    #backup-er-log .date{
+        margin-left:auto;
+    }
 </style>
 
 <template>
-    <component-add max-height="calc(100% - 50px)">
+    <component-add max-height="calc(100% - 50px)" style="max-height:calc(100% - 50px);">
     </component-add>
+    <div id="backup-er-log"><div class="from"></div><div class="date"></div></div>
 </template>
 
 <script>
@@ -74,26 +90,35 @@
                 data[backupFolder.id] = currentData;
                 el._refs.appcontainer.saveData("backups", data);
             },
-            runAll:function(){
+            runAll: function () {
                 var el = this;
                 var backupFolders = el.querySelectorAll("backup-folder");
-                backupFolders.forEach(function(bF){
+                backupFolders.forEach(function (bF) {
                     bF.run();
-                });                
+                });
             },
-            watchAll:function(){
+            watchAll: function () {
                 var el = this;
                 var backupFolders = el.querySelectorAll("backup-folder");
-                backupFolders.forEach(function(bF){
+                backupFolders.forEach(function (bF) {
                     bF._refs.watch.checked = true;
-                });                
+                });
             },
-            stopWatchAll:function(){
+            stopWatchAll: function () {
                 var el = this;
                 var backupFolders = el.querySelectorAll("backup-folder");
-                backupFolders.forEach(function(bF){
+                backupFolders.forEach(function (bF) {
                     bF._refs.watch.checked = false;
-                });                            
+                });
+            },
+            updateLog: function (from) {
+                var el = this;
+                var currentDate = new Date();
+                var date = currentDate.getDate() + "/" + (currentDate.getMonth() + 1) + "/" + currentDate.getFullYear() + " " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                el._refs.logProject.innerText = from;
+                el._refs.logDate.innerText = date;
+                el._refs.log.title = from + "=>" + date;                
+                ipcRenderer.send('set-tray', from + "=>" + date);
             }
         },
 
@@ -113,6 +138,9 @@
                 var el = this;
                 el._refs.componentAdd = el.querySelector("component-add");
                 el._refs.appcontainer = document.querySelector("app-container");
+                el._refs.log = el.querySelector("#backup-er-log");
+                el._refs.logProject = el._refs.log.querySelector(".from");
+                el._refs.logDate = el._refs.log.querySelector(".date");
             }
         },
 
