@@ -92,7 +92,7 @@ exports.watch = function (from, to, options) {
     return watcher;
 };
 
-function onWatch(from){
+function onWatch(from) {
     document.querySelector("backup-er").updateLog(from);
 }
 
@@ -124,7 +124,9 @@ exports.version = function (from, to, version, options, callback) {
                     var finalFile = path.resolve(path.join(temporal, version) + ".zip");
                     copyFiles(files, [subTemporalPath], function () {
                         vCompress.pack(subTemporalPath, finalFile, "zip", {
-                            "outputHandler": function(){console.log("output")},
+                            "outputHandler": function () {
+                                console.log("output")
+                            },
                             "doneHandler": function () {
                                 io.deleteFolderRecursiveSync(subTemporalPath);
                                 var length = to.length;
@@ -141,7 +143,9 @@ exports.version = function (from, to, version, options, callback) {
                 var finalFile = path.resolve(path.join(temporal, version) + ".zip");
                 copyFiles(files, [subTemporalPath], function () {
                     vCompress.pack(subTemporalPath, finalFile, "zip", {
-                        "outputHandler": function(){console.log("output")},
+                        "outputHandler": function () {
+                            console.log("output")
+                        },
                         "doneHandler": function () {
                             io.deleteFolderRecursiveSync(subTemporalPath);
                             var length = to.length;
@@ -247,6 +251,10 @@ function copyFiles(files, to, callback) {
 function emptyDestSync(to) {
     var length = to.length;
     for (var i = 0; i < length; i++) {
-        fs.emptyDirSync(to[i]);
+        try {
+            fs.emptyDirSync(to[i]);
+        } catch (error) {
+            document.querySelector("backup-er").updateLog("ERROR (can't remove): " + error.path);
+        }
     }
 }

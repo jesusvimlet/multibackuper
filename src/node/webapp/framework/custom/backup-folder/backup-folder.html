@@ -500,6 +500,7 @@
                 el._refs.saveBackupVersion = el.querySelector("#saveBackupVersion");
                 el._refs.saveBackupDescription = el.querySelector("#saveBackupDescription");
             },
+            // @function checkEnabled (private) [Toggle run and watch to disable if not enough data to work]
             checkEnabled: function () {
                 var el = this;
                 if (el.from && el.to && Array.isArray(el.to) && el.to.length > 0) {
@@ -562,7 +563,7 @@
                     });
                 } else {
                     el._addExclude();
-                }
+                }                
                 if (el.watch && el.watch != "false") {
                     setTimeout(function () {
                         el._refs.watch.checked = true;
