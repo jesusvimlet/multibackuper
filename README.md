@@ -25,6 +25,11 @@ Multibackup actually clone the project, it does not keep a history of previous c
 
 ## Installation
 
+1. Clone the project.
+2. Run `npm run build:windows` or `npm run build:linux`.
+3. If you are not familiar with node there are compiled versions in previous commits.
+
+**Outdated**
 1. Download from /release:
 
     * [Windows](https://github.com/jesusvimlet/multibackuper/raw/master/release/Multibackup-1.0.0-win.zip)
