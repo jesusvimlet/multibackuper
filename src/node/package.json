@@ -23,7 +23,7 @@
     "glob": "7.1.2"
   },
   "devDependencies": {
-    "electron": "^1.8.6",
+    "electron": "^9.1.0",
     "electron-reload": "1.2.2",
     "electron-builder": "20.13.4"
   },
